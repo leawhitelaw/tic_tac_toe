@@ -4,7 +4,7 @@
 char matrix[3][3]; // two dimensional array/matrix
 char check();
 void init_matrix();
-void get_player_move();
+void get_player_move(int player);
 void get_comp_move();
 void display_board();
 void undo();
@@ -18,17 +18,23 @@ int main()
 	int player=1;
 	char done;
 	printf("\n\nWelcome to Tic Tac Toe.\n");
-	printf("\nYou will be playing against the computer.\n\n");
+	printf("\nYou are playing in two-player mode.\n\n");
 
 	done=' ';
 	init_matrix();
 
 	do{
 		display_board();
-		get_player_move();
+		get_player_move(player);
 		done = check_win(); //see if anyone has won
 		if(done!=' ') break;
-		get_comp_move();
+		if(player==1){
+			player=2;
+		}
+		else{
+			player=1;
+		}
+		get_player_move(player);
 		done = check_win();
 	}while(done==' ');
 
@@ -56,21 +62,21 @@ void get_player_move(int player)
 {
 	int x, y;
 
-	printf("\n\nEnter X,Y co-ords for your move: ");
+	printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 	scanf("%d%*c%d",&x, &y);
 
 	x--; y--;
 
 	if(matrix[x][y]!=' '){
 		printf("Invalid move, choose and empty space.\n");
-		get_player_move();
+		get_player_move(player);
 	}
 	else
 	{
-		if(player = 1){
+		if(player == 1){
 			matrix[x][y] = 'X';
 		}
-		else if(player = 2){
+		else if(player == 2){
 			matrix[x][y] = 'O';
 		}
 	}
