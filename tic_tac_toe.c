@@ -1,23 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define MAX 9
 
-char matrix[3][3]; // two dimensional array/matrix
-char check();
+struct move{
+	char x;
+	char y;
+	int player;
+};
+
+struct stack
+{
+  struct move array[MAX];
+  int top;
+};
+
+// functions for tic-tac-toe
+char matrix[3][3];
 void init_matrix();
-void get_player_move(int player);
-void get_comp_move();
+void get_player_move(int player, struct move *);
+struct move check_play(struct stack *);
+void display_move(struct move *);
+//void get_comp_move();
 void display_board();
 void undo();
 void redo();
 void replay();
-void instructions();
+//void instructions();
 char check_win();
 char check_draw();
 
+//functions for stacks
+void init_stack(struct stack *);
+void push(struct stack *, struct move *);
+struct move *pop(struct stack *);
+
 int main()
 {
+	struct stack s1;
+	struct stack s2;
+	struct move move_arr;
+	init_stack(&s1);
 	int player=1;
 	char done;
+	char play;
 	printf("\n\n          WELCOME TO ");
 	printf("\n _________   ________   ________ ");
 	printf("\n|___   ___| |___  ___| |___  ___| ");
@@ -31,8 +56,13 @@ int main()
 
 	do{
 		display_board();
+		printf("\n\nEnter 'u' to undo or 'p' to continue play: ");
+		check_play(&s1);
+		display_move(&move_arr);
 		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
-		get_player_move(player);
+		get_player_move(player, &move_arr);
+		display_move(&move_arr);
+		push(&s1, &move_arr);
 		done = check_win(); //see if anyone has won
 		done = check_draw();
 		if(done!=' ') break;
@@ -46,7 +76,14 @@ int main()
 
 	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON!\n");
 	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON!\n");
-	else if(done=='D') printf("DRAW !! \n");
+	else if(done=='D') printf("Unfortunately we have come to a draw! To play again type 'Y', otherwise press enter to quit.\n");
+	scanf("%c", &play);
+	if(play == 'Y'){
+		done = ' ';
+	}
+	else{
+		return 0;
+	}
 	//printf("HA! I have beaten you!\n");
 	display_board(); //show final positions
 
@@ -65,8 +102,17 @@ void init_matrix()
 		}
 	}
 }
+void display_move(struct move *move_arr)
+{
+	if(move_arr->player == 1){
+		matrix[move_arr->x][move_arr->y] = 'X';
+	}
+	else if(move_arr->player == 2){
+		matrix[move_arr->x][move_arr->y] = 'O';
+	}
+}
 //get move from player 1
-void get_player_move(int player)
+void get_player_move(int player, struct move *move_arr)
 {
 	int x, y;
 
@@ -76,17 +122,27 @@ void get_player_move(int player)
 
 	if(matrix[x][y]!=' '){
 		printf("Invalid move, choose and empty space.\n");
-		get_player_move(player);
+		get_player_move(player, move_arr);
 	}
 	else
 	{
-		if(player == 1){
-			matrix[x][y] = 'X';
-		}
-		else if(player == 2){
-			matrix[x][y] = 'O';
-		}
+		move_arr->x = x;
+		move_arr->y = y;
+		move_arr->player = player;
 	}
+}
+struct move check_play(struct stack *s1)
+{
+	char play;
+	scanf("%c", &play);
+	if(play == 'p'){
+		return s1->array[s1->top];
+	}
+	else if(play == 'u'){
+		pop(s1);
+		return s1->array[s1->top];
+	}
+	return s1->array[s1->top];
 }
 char check_draw()
 {
@@ -166,4 +222,31 @@ char check_win()
 		return matrix[0][2];
 	}
 	return ' ';
+}
+
+void init_stack(struct stack *s)
+{
+  s->top = -1;
+}
+void push(struct stack *s, struct move *item)
+{
+  if(s->top == MAX -1)
+  {
+    printf("Stack is full. Couldn't push move onto stack\n");
+    return;
+  }
+  s->top++;
+  s->array[s->top] = *item;
+}
+struct move *pop(struct stack *s)
+{
+  struct move *data;
+  if(s->top == -1)
+  {
+    printf("Stack is empty\n");
+    return NULL;
+  }
+  data = &s->array[s->top];
+  s->top--;
+  return data;
 }
