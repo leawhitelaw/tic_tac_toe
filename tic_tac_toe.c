@@ -12,13 +12,19 @@ void redo();
 void replay();
 void instructions();
 char check_win();
+char check_draw();
 
 int main()
 {
 	int player=1;
 	char done;
-	printf("\n\nWelcome to Tic Tac Toe.\n");
-	printf("\nYou are playing in two-player mode.\n\n");
+	printf("\n\n          WELCOME TO ");
+	printf("\n _________   ________   ________ ");
+	printf("\n|___   ___| |___  ___| |___  ___| ");
+	printf("\n   |  |        |  |       |  | ");
+	printf("\n   |  |        |  |       |  | ");
+	printf("\n   |__|IC      |__|AC     |__|OE");
+	printf("\n\nYou are playing in two-player mode.\n\n");
 
 	done=' ';
 	init_matrix();
@@ -28,6 +34,7 @@ int main()
 		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 		get_player_move(player);
 		done = check_win(); //see if anyone has won
+		done = check_draw();
 		if(done!=' ') break;
 		if(player==1){
 			player=2;
@@ -39,6 +46,7 @@ int main()
 
 	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON!\n");
 	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON!\n");
+	else if(done=='D') printf("DRAW !! \n");
 	//printf("HA! I have beaten you!\n");
 	display_board(); //show final positions
 
@@ -80,8 +88,20 @@ void get_player_move(int player)
 		}
 	}
 }
-
-void get_comp_move()
+char check_draw()
+{
+	int i, j;
+	for(i=0; i<3; i++)
+	{
+		for(j=0; j<3; j++)
+		{
+			if(matrix[i][j]==' ') return ' ';
+		}
+		if(matrix[i][j]==' ') return ' ';
+	}
+	return 'D';
+}
+/*void get_comp_move()
 {
 	int i, j;
 	for(i=0; i<3; i++)
@@ -102,7 +122,7 @@ void get_comp_move()
 	{
 		matrix[i][j] = 'O';
 	}
-}
+}*/
 // Display board on screen
 void display_board()
 {
