@@ -25,6 +25,7 @@ int main()
 
 	do{
 		display_board();
+		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 		get_player_move(player);
 		done = check_win(); //see if anyone has won
 		if(done!=' ') break;
@@ -34,12 +35,11 @@ int main()
 		else{
 			player=1;
 		}
-		get_player_move(player);
-		done = check_win();
 	}while(done==' ');
 
-	if(done=='X') printf("CONGRATULATIONS! You have WON!\n");
-	else printf("HA! I have beaten you!\n");
+	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON!\n");
+	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON!\n");
+	//printf("HA! I have beaten you!\n");
 	display_board(); //show final positions
 
 	return 0;
@@ -62,7 +62,6 @@ void get_player_move(int player)
 {
 	int x, y;
 
-	printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 	scanf("%d%*c%d",&x, &y);
 
 	x--; y--;
@@ -108,6 +107,7 @@ void get_comp_move()
 void display_board()
 {
 	int i;
+	int x = 1;
 
 	printf("   Y   Y   Y  \n");
 	for(i=0; i<3; i++)
