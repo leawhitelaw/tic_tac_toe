@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #define MAX 9
 
 struct move{
@@ -16,9 +17,10 @@ struct stack
 
 // functions for tic-tac-toe
 char matrix[3][3];
+int player;
 void init_matrix();
 void get_player_move(int player, struct move *);
-void check_play(struct stack *);
+void check_play(struct stack *, struct stack *);
 void display_move(struct move *);
 //void get_comp_move();
 void display_board();
@@ -34,6 +36,11 @@ void init_stack(struct stack *);
 void push(struct stack *, struct move *);
 struct move *pop(struct stack *);
 
+//functions for queue
+void enqueue(int *, int, int *, int *);
+int dequeue(int *, int *, int *);
+int empty(int *); 
+
 int main()
 {
 	//its showing all the moves that have been done, even when the stack is popped. If it
@@ -42,7 +49,8 @@ int main()
 	struct stack s2;
 	struct move move_arr;
 	init_stack(&s1);
-	int player=1;
+	init_stack(&s2);
+	player=1;
 	char done;
 	char play;
 	printf("\n\n          WELCOME TO ");
@@ -58,10 +66,9 @@ int main()
 
 	do{
 		display_board();
-		check_play(&s1);
+		check_play(&s1, &s2);
 		move_arr = s1.array[s1.top];
 		display_move(&move_arr);
-		//display_move(&move_arr);
 		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 		get_player_move(player, &move_arr);
 		display_move(&move_arr);
@@ -119,7 +126,18 @@ void get_player_move(int player, struct move *move_arr)
 {
 	int x, y;
 
-	scanf("%d%*c%d",&x, &y);
+	int check = scanf("%d%*c%d",&x, &y);
+	printf("check is %d:", check);
+	/*if(check!= 2){
+		printf("Please enter integer X and Y co-ordinates in the format \"X,Y\"'.\n");
+		get_player_move(player, move_arr);
+	}else if(!(isdigit(x))){
+		printf("Please enter integer for X.\n");
+		get_player_move(player, move_arr);
+	}else if(!(isdigit(y))){
+		printf("Please enter integer for Y.\n");
+		get_player_move(player, move_arr);
+	}*/
 
 	x--; y--;
 
@@ -134,15 +152,37 @@ void get_player_move(int player, struct move *move_arr)
 		move_arr->player = player;
 	}
 }
-void check_play(struct stack *s1)
+void check_play(struct stack *s1, struct stack *s2)
 {
 	struct move move;
-	printf("\n\nEnter 'u' to undo or 'p' to continue play: \n");
+	printf("\n\nEnter 'u' to undo, 'r' to redo or any character to continue play: \n");
 	char choice;
-	scanf(" %c", &choice);
+	int check = scanf(" %c", &choice);
+	printf("check is %d:", check);
+	if(check != 1 || !(isalpha(choice))){
+		printf("Please enter 1 alphabetical character only.\n");
+		check_play(s1,s2);
+	}
 	if(choice == 'u'){
 		move = *pop(s1);
 		matrix[move.x][move.y]=' ';
+		player = move.player;
+		push(s2, &move);
+		display_board();
+		check_play(s1,s2);
+	}
+	if(choice == 'r'){
+		move = *pop(s2);
+		if(move.player==1){
+			player =2;
+			matrix[move.x][move.y]='X';
+		}
+		else if(move.player==2){
+			player =1;
+			matrix[move.x][move.y]='O';
+		}
+		display_board();
+		check_play(s1,s2);
 	}
 	return;
 }
