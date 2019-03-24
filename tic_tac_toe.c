@@ -18,7 +18,7 @@ struct stack
 char matrix[3][3];
 void init_matrix();
 void get_player_move(int player, struct move *);
-struct move check_play(struct stack *);
+void check_play(struct stack *);
 void display_move(struct move *);
 //void get_comp_move();
 void display_board();
@@ -36,6 +36,8 @@ struct move *pop(struct stack *);
 
 int main()
 {
+	//its showing all the moves that have been done, even when the stack is popped. If it
+	//was just showing 'move' it would show only 1 X or O
 	struct stack s1;
 	struct stack s2;
 	struct move move_arr;
@@ -56,9 +58,10 @@ int main()
 
 	do{
 		display_board();
-		printf("\n\nEnter 'u' to undo or 'p' to continue play: ");
 		check_play(&s1);
+		move_arr = s1.array[s1.top];
 		display_move(&move_arr);
+		//display_move(&move_arr);
 		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 		get_player_move(player, &move_arr);
 		display_move(&move_arr);
@@ -131,18 +134,17 @@ void get_player_move(int player, struct move *move_arr)
 		move_arr->player = player;
 	}
 }
-struct move check_play(struct stack *s1)
+void check_play(struct stack *s1)
 {
-	char play;
-	scanf("%c", &play);
-	if(play == 'p'){
-		return s1->array[s1->top];
+	struct move move;
+	printf("\n\nEnter 'u' to undo or 'p' to continue play: \n");
+	char choice;
+	scanf(" %c", &choice);
+	if(choice == 'u'){
+		move = *pop(s1);
+		matrix[move.x][move.y]=' ';
 	}
-	else if(play == 'u'){
-		pop(s1);
-		return s1->array[s1->top];
-	}
-	return s1->array[s1->top];
+	return;
 }
 char check_draw()
 {
