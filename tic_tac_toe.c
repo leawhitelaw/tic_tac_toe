@@ -31,7 +31,7 @@ void replay();
 void instructions();
 char check_win();
 char check_draw();
-//void get_comp_move();
+void clear();
 
 /*****functions for stacks*****/
 void init_stack(struct stack *);
@@ -148,26 +148,27 @@ void display_move(struct move *move_arr)
 /*****get move from each player*****/
 void get_player_move(int player, struct move *move_arr)
 {
+	clear();
 	int x, y;
 
-	int check = scanf("%d%*c%d",&x, &y);
-	printf("check is %d:", check);
-	if(check!= 2 || !(isdigit(x)) || !(isdigit(y))){
+	int check = scanf("\n%d%*c%d",&x, &y);
+	if(check== 2){
+		x--; y--;
+
+		if(matrix[x][y]!=' '){
+			printf("Invalid move, choose and empty space.\n");
+			get_player_move(player, move_arr);
+		}
+		else
+		{
+			move_arr->x = x;
+			move_arr->y = y;
+			move_arr->player = player;
+		}
+	}
+	else{
 		printf("Please enter integer X and Y co-ordinates in the format \"X,Y\"'.\n");
 		get_player_move(player, move_arr);
-	}
-
-	x--; y--;
-
-	if(matrix[x][y]!=' '){
-		printf("Invalid move, choose and empty space.\n");
-		get_player_move(player, move_arr);
-	}
-	else
-	{
-		move_arr->x = x;
-		move_arr->y = y;
-		move_arr->player = player;
 	}
 }
 
@@ -177,6 +178,7 @@ void check_play(struct stack *s1, struct stack *s2)
 	struct move move;
 	printf("\n\nEnter 'u' to undo, 'r' to redo or any other character to continue play: \n");
 	char choice;
+	clear();
 	int check = scanf(" %c", &choice);
 	printf("check is %d:", check);
 	if(check != 1 || !(isalpha(choice))){
@@ -339,25 +341,6 @@ void delay(int number_of_seconds)
     while (clock() < start_time + milli_seconds)
         ;
 }
-/*void get_comp_move()
-{
-	int i, j;
-	for(i=0; i<3; i++)
-	{
-		for(j=0; j<3; j++)
-		{
-			if(matrix[i][j]==' ') break;
-		}
-		if(matrix[i][j]==' ') break;
-	}
-
-	if(i*j==9)
-	{
-		printf("Draw\n");
-		exit(0);
-	}
-	else
-	{
-		matrix[i][j] = 'O';
-	}
-}*/
+void clear(){
+	while(getchar()!='\n');
+}
