@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
 #define MAX 9
 
 /*****define struct for recording each move*****/
@@ -41,6 +42,8 @@ struct move *pop(struct stack *);
 void enqueue(struct move *, struct move *, int *, int *);
 struct move *dequeue(struct move *, int *, int *);
 
+void delay(int);
+
 int main()
 {
 	//init structs
@@ -78,7 +81,6 @@ int main()
 		display_move(&move_arr);
 		push(&s1, &move_arr);
 		done = check_win();
-		done = check_draw();
 		if(done!=' ') break;
 		if(player==1){
 			player=2;
@@ -88,18 +90,34 @@ int main()
 		}
 	}while(done==' ');
 
-	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON!\n");
-	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON!\n");
-	else if(done=='D') printf("Unfortunately we have come to a draw! To play again type 'Y', otherwise press enter to quit.\n");
-	scanf("%c", &play);
-	if(play == 'Y'){
+	display_board(); //show final positions
+	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
+	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
+	else if(done=='D') printf("Unfortunately we have come to a draw! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
+	scanf(" %c", &play);
+	if(play == 'Y' || play == 'y'){
 		done = ' ';
+		init_matrix();
+	}
+	else if(play == 'p'){
+		struct move *mv;
+		int i;
+		init_matrix();
+		for(i=0; i<9; i++){
+			mv = dequeue(arr, &front, &rear);
+			if(mv->player==1){
+				matrix[mv->x][mv->y] = 'X';
+			}
+			else{
+				matrix[mv->x][mv->y] = 'O';
+			}
+			display_board();
+			delay(1500);
+		}
 	}
 	else{
 		return 0;
 	}
-	//printf("HA! I have beaten you!\n");
-	display_board(); //show final positions
 	return 0;
 }
 
@@ -134,10 +152,10 @@ void get_player_move(int player, struct move *move_arr)
 
 	int check = scanf("%d%*c%d",&x, &y);
 	printf("check is %d:", check);
-	/*if(check!= 2 || !(isdigit(x)) || !(isdigit(y))){
+	if(check!= 2 || !(isdigit(x)) || !(isdigit(y))){
 		printf("Please enter integer X and Y co-ordinates in the format \"X,Y\"'.\n");
 		get_player_move(player, move_arr);
-	}*/
+	}
 
 	x--; y--;
 
@@ -157,7 +175,7 @@ void get_player_move(int player, struct move *move_arr)
 void check_play(struct stack *s1, struct stack *s2)
 {
 	struct move move;
-	printf("\n\nEnter 'u' to undo, 'r' to redo or any character to continue play: \n");
+	printf("\n\nEnter 'u' to undo, 'r' to redo or any other character to continue play: \n");
 	char choice;
 	int check = scanf(" %c", &choice);
 	printf("check is %d:", check);
@@ -189,22 +207,6 @@ void check_play(struct stack *s1, struct stack *s2)
 	return;
 }
 
-/*****check if players have drawn*****/
-char check_draw()
-{
-	int i, j;
-	for(i=0; i<3; i++)
-	{
-		for(j=0; j<3; j++)
-		{
-			if(matrix[i][j]==' ') return ' ';
-		}
-		if(matrix[i][j]==' ') return ' ';
-	}
-	return 'D';
-}
-
-
 /*****display game board*****/
 void display_board()
 {
@@ -223,13 +225,11 @@ void display_board()
 /*****check if player has won*****/
 char check_win()
 {
-	int i;
-
+	int i,j;
 	//check rows
 	for(i=0; i<3; i++)
 	{
-		if(matrix[i][0]==matrix[i][1] &&
-				matrix[i][0]==matrix[i][2])
+		if(matrix[i][0]== matrix[i][1] && matrix[i][0]==matrix[i][2])
 				return matrix[i][0];
 	}
 	//check columns
@@ -247,6 +247,18 @@ char check_win()
 	if(matrix[0][2]==matrix[1][1] && matrix[1][1]==matrix[2][0])
 	{
 		return matrix[0][2];
+	}
+	//check for draw
+	for(i=0; i<3; i++)
+	{
+		for(j=0; j<3; j++)
+		{
+			if(matrix[i][j]==' ') return ' ';
+		}
+		if(matrix[i][j]==' ') return ' ';
+		else{
+			return 'D';
+		}
 	}
 	return ' ';
 }
@@ -314,6 +326,18 @@ struct move *dequeue(struct move *arr, int *pfront, int *prear)
   else
     (*pfront)++;
   return data;
+}
+void delay(int number_of_seconds)
+{
+    // Converting time into milli_seconds
+    int milli_seconds = 1000 * number_of_seconds;
+
+    // Stroing start time
+    clock_t start_time = clock();
+
+    // looping till required time is not acheived
+    while (clock() < start_time + milli_seconds)
+        ;
 }
 /*void get_comp_move()
 {
