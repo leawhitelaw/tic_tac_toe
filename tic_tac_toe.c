@@ -25,9 +25,6 @@ void get_player_move(int player, struct move *);
 void check_play(struct stack *, struct stack *);
 void display_move(struct move *);
 void display_board();
-void undo();
-void redo();
-void replay();
 void instructions();
 char check_win();
 char check_draw();
@@ -36,7 +33,7 @@ void clear();
 /*****functions for stacks*****/
 void init_stack(struct stack *);
 void push(struct stack *, struct move *);
-struct move *pop(struct stack *);
+struct move *pop(struct stack *, struct stack *, struct stack*);
 
 /*****functions for queue*****/
 void enqueue(struct move *, struct move *, int *, int *);
@@ -57,8 +54,7 @@ int main()
 	init_stack(&s1);
 	init_stack(&s2);
 	player=1;
-	char done;
-	char play;
+	char done, draw, play, commit;
 	printf("\n\n          WELCOME TO ");
 	printf("\n _________   ________   ________ ");
 	printf("\n|___   ___| |___  ___| |___  ___| ");
@@ -67,6 +63,7 @@ int main()
 	printf("\n   |__|IC      |__|AC     |__|OE");
 	printf("\n\nYou are playing in two-player mode.\n\n");
 
+	draw=' ';
 	done=' ';
 	init_matrix();
 
@@ -74,51 +71,49 @@ int main()
 		display_board();
 		check_play(&s1, &s2);
 		move_arr = s1.array[s1.top];
-		enqueue(arr, &move_arr, &front, &rear);
 		display_move(&move_arr);
 		printf("\n\nPlayer %d enter X,Y co-ords for your move: ", player);
 		get_player_move(player, &move_arr);
 		display_move(&move_arr);
 		push(&s1, &move_arr);
+		enqueue(arr, &move_arr, &front, &rear);
 		done = check_win();
-		if(done!=' ') break;
+		draw = check_draw();
+		if(done!=' ' || draw !=' ') break;
 		if(player==1){
 			player=2;
 		}
 		else{
 			player=1;
 		}
-	}while(done==' ');
+	}while(done==' ' && draw==' ');
 
 	display_board(); //show final positions
 	if(done=='X') printf("CONGRATULATIONS Player 1: You have WON! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
 	else if(done=='O') printf("CONGRATULATIONS Player 2: You have  WON! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
-	else if(done=='D') printf("Unfortunately we have come to a draw! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
+	else if(draw=='D') printf("Unfortunately we have come to a draw! To play again type 'y', to watch a replay enter 'p', otherwise enter 'q' to quit.\n");
+	clear();
 	scanf(" %c", &play);
+
 	if(play == 'Y' || play == 'y'){
 		done = ' ';
+		draw = ' ';
 		init_matrix();
+		main();
 	}
 	else if(play == 'p'){
 		struct move *mv;
-		int i;
 		init_matrix();
-		for(i=0; i<9; i++){
+		int i;
+		for(i=0; i<10; i++){
 			mv = dequeue(arr, &front, &rear);
-			if(mv->player==1){
-				matrix[mv->x][mv->y] = 'X';
-			}
-			else{
-				matrix[mv->x][mv->y] = 'O';
-			}
 			display_board();
+			display_move(mv);
 			delay(1500);
 		}
-	}
-	else{
+	}else{
 		return 0;
 	}
-	return 0;
 }
 
 /*****Initialise the board*****/
@@ -156,7 +151,7 @@ void get_player_move(int player, struct move *move_arr)
 		x--; y--;
 
 		if(matrix[x][y]!=' '){
-			printf("Invalid move, choose and empty space.\n");
+			printf("Invalid move, choose an empty space.\n");
 			get_player_move(player, move_arr);
 		}
 		else
@@ -176,25 +171,24 @@ void get_player_move(int player, struct move *move_arr)
 void check_play(struct stack *s1, struct stack *s2)
 {
 	struct move move;
-	printf("\n\nEnter 'u' to undo, 'r' to redo or any other character to continue play: \n");
+	printf("\n\nEnter 'u' to undo, 'r' to redo, 'i' for instructions OR any other character to continue play: \n");
 	char choice;
-	clear();
 	int check = scanf(" %c", &choice);
-	printf("check is %d:", check);
-	if(check != 1 || !(isalpha(choice))){
+	if(check != 1){
 		printf("Please enter 1 alphabetical character only.\n");
 		check_play(s1,s2);
 	}
-	if(choice == 'u'){
-		move = *pop(s1);
+	if(choice == 'u' || choice == 'U'){
+		move = *pop(s1, s1, s2);
 		matrix[move.x][move.y]=' ';
 		player = move.player;
 		push(s2, &move);
 		display_board();
 		check_play(s1,s2);
 	}
-	if(choice == 'r'){
-		move = *pop(s2);
+	if(choice == 'r' || choice == 'R'){
+		move = *pop(s2, s1, s2);
+		push(s1, &move);
 		if(move.player==1){
 			player =2;
 			matrix[move.x][move.y]='X';
@@ -206,6 +200,9 @@ void check_play(struct stack *s1, struct stack *s2)
 		display_board();
 		check_play(s1,s2);
 	}
+	if(choice == 'i' || choice == 'I'){
+		instructions();
+	}
 	return;
 }
 
@@ -214,12 +211,12 @@ void display_board()
 {
 	int i;
 	int x = 1;
-
-	printf("   Y   Y   Y  \n");
+	printf("      Y   Y   Y\n");
+	printf("\n      1   2   3  \n");
 	for(i=0; i<3; i++)
 	{
-		printf("X  %c | %c | %c ", matrix[i][0], matrix[i][1], matrix[i][2]);
-		if(i!=2) printf("\n  ---|---|---\n");
+		printf("X  %d  %c | %c | %c ", i+1, matrix[i][0], matrix[i][1], matrix[i][2]);
+		if(i!=2) printf("\n     ---|---|---\n");
 	}
 	printf("\n");
 }
@@ -227,7 +224,7 @@ void display_board()
 /*****check if player has won*****/
 char check_win()
 {
-	int i,j;
+	int i;
 	//check rows
 	for(i=0; i<3; i++)
 	{
@@ -250,7 +247,12 @@ char check_win()
 	{
 		return matrix[0][2];
 	}
-	//check for draw
+	return ' ';
+}
+/*****check for draw*****/
+char check_draw()
+{
+	int i, j;
 	for(i=0; i<3; i++)
 	{
 		for(j=0; j<3; j++)
@@ -258,11 +260,8 @@ char check_win()
 			if(matrix[i][j]==' ') return ' ';
 		}
 		if(matrix[i][j]==' ') return ' ';
-		else{
-			return 'D';
-		}
 	}
-	return ' ';
+	return 'D';
 }
 
 /*****initialise stack*****/
@@ -284,13 +283,19 @@ void push(struct stack *s, struct move *item)
 }
 
 /*****pop(remove) from stack*****/
-struct move *pop(struct stack *s)
+struct move *pop(struct stack *s, struct stack *s1, struct stack *s2)
 {
   struct move *data;
   if(s->top == -1)
   {
-    printf("Stack is empty\n");
-    return NULL;
+    printf("Cannot repeat this action any futher.\n");
+    if(s1->top == -1){
+			data = &s2->array[s2->top];
+			return data;
+		}else{
+			data = &s1->array[s1->top];
+			return data;
+		}
   }
   data = &s->array[s->top];
   s->top--;
@@ -341,6 +346,18 @@ void delay(int number_of_seconds)
     while (clock() < start_time + milli_seconds)
         ;
 }
-void clear(){
+void clear()
+{
 	while(getchar()!='\n');
+}
+void instructions()
+{
+	printf("\n\n          WELCOME TO TIC TAC TOE ");
+	printf("\n\n You are playing in two player mode. ");
+	printf("\n Each player is automatically assigned an 'X' or an 'O'.");
+	printf("\n To make a move, type in the x, y co-ordinates of the square which you wish to place your mark.");
+	printf("\n After a move has been made, you can enter 'u' to undo a move and 'r' to redo it.");
+	printf("\n Once a new move has been made, old moves cannot be redone.");
+	printf("\n To win the game, you must get a combination of 3 of you character in a row (including diagonals).");
+	printf("\n To exit the game, press Ctrl + c.");
 }
